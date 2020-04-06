@@ -1,26 +1,28 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-
 namespace ruler
 {
+    using System;
+    using Microsoft.AspNetCore.Hosting;
+    using Microsoft.Extensions.Hosting;
+
     public class Program
     {
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
+        public static void Main(string[] args) 
+            => CreateHostBuilder(args).Build().Run();
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
+                .ConfigureWebHostDefaults(Configure);
+
+
+        public static void Configure(IWebHostBuilder webBuilder)
+        {
+            var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+            var sentryDns = Environment.GetEnvironmentVariable("SENTRY_DNS") ??
+                            throw new Exception($"Not configured");
+            webBuilder
+                .UseStartup<Startup>()
+                .UseSentry(sentryDns)
+                .UseUrls($"http://0.0.0.0:{port}");
+        }
     }
 }
