@@ -27,7 +27,6 @@ namespace ruler
         {
             if (env.IsDevelopment()) 
                 app.UseDeveloperExceptionPage();
-            app.UseHttpsRedirection();
             app.UseRouting();
             app.UseAuthorization();
             app.UseEndpoints(endpoints => 

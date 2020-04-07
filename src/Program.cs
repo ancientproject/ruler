@@ -22,7 +22,7 @@ namespace ruler
             webBuilder
                 .UseStartup<Startup>()
                 .UseSentry(sentryDns)
-                .UseUrls($"http://0.0.0.0:{port}");
+            .UseUrls($"http://*.*.*.*:{port}");
         }
     }
 }
