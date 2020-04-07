@@ -6,7 +6,7 @@
 
     public class RulerExternalApiProvider : IRulerAPI
     {
-        private const string origin = "https://cluster.ruler.runic.cloud";
+        private const string origin = "https://cluster.ruler.runic.cloud/api";
         private readonly IFireStoreAdapter _adapter;
         private readonly IAuthProvider _authProvider;
 
