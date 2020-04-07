@@ -75,7 +75,7 @@
             {
                 Type = TreeType.Blob,
                 Mode = Octokit.FileMode.File,
-                Path = "README.md",
+                Path = name,
                 Sha = result.Sha
             };
         }
