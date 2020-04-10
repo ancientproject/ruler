@@ -1,15 +1,11 @@
 namespace ruler.Controllers
 {
-    using System;
-    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Features;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Octokit;
 
     [ApiController]
     public class StorageProxy : ControllerBase
@@ -31,11 +27,6 @@ namespace ruler.Controllers
             await using var memory = new MemoryStream();
             await file.CopyToAsync(memory, _cancellationToken);
             
-
-            var commit = await _adapter.CreateCommitAsync("packages/test.nuget", memory, _cancellationToken);
-
-            await _adapter.Push(commit);
-
             return StatusCode(200);
         }
     }
