@@ -9,7 +9,30 @@
     using Microsoft.Extensions.Configuration;
     using Octokit;
 
-    public class GithubAdapter
+    public interface IGithubAdapter
+    {
+        Task<Func<Func<(string shaTree, string shaBranch), NewCommit>, Task<Commit>>> CreateCommitAsync(IDictionary<string, MemoryStream> files,
+            CancellationToken cancellationToken = default);
+
+        Task<Func<Func<(string shaTree, string shaBranch), NewCommit>, Task<Commit>>> CreateCommitAsync(string name, MemoryStream memory,
+            CancellationToken cancellationToken = default);
+
+        Task<NewTreeItem> CreateTreeItem(string name, MemoryStream memory);
+        Task<Func<Func<(string shaTree, string shaBranch), NewCommit>, Task<Commit>>> CreateCommitAsync(IEnumerable<NewTreeItem> files, CancellationToken cancellationToken = default);
+        Task<Reference> Push(Commit commit);
+        Task<BlobReference> CreateBlob(NewBlob blob);
+        Func<Func<(string shaTree, string shaBranch), NewCommit>, Task<Commit>> CreateCommitAsync(string shaTree, string branchSha);
+        Task<(string sha, IReadOnlyList<TreeItem> items)> FillTree(NewTree tree, IEnumerable<NewTreeItem> files);
+        Task<IReadOnlyList<RepositoryContent>> GetFilesAsync(string path);
+        Task<byte[]> GetBinaryFileAsync(string path);
+        Task<NewTree> CreateNewTree();
+        Task<Reference> GetMasterAsync();
+        Task<Commit> GetLastCommitBy(string sha);
+        ProductHeaderValue GetProductHeader();
+        (string branch, string owner, string repo) GetConfig();
+    }
+
+    public class GithubAdapter : IGithubAdapter
     {
         private readonly IRulerAPI _api;
         private readonly IConfiguration _configuration;
@@ -42,7 +65,7 @@
             };
         }
 
-        public async Task<Commit> CreateCommitAsync(IDictionary<string, MemoryStream> files,
+        public async Task<Func<Func<(string shaTree, string shaBranch), NewCommit>, Task<Commit>>> CreateCommitAsync(IDictionary<string, MemoryStream> files,
             CancellationToken cancellationToken = default)
         {
             var list = new List<NewTreeItem>();
@@ -50,7 +73,7 @@
                 list.Add(await CreateTreeItem(name, memory));
             return await CreateCommitAsync(list, cancellationToken);
         }
-        public async Task<Commit> CreateCommitAsync(string name, MemoryStream memory,
+        public async Task<Func<Func<(string shaTree, string shaBranch), NewCommit>, Task<Commit>>> CreateCommitAsync(string name, MemoryStream memory,
             CancellationToken cancellationToken = default)
         {
             var list = new List<NewTreeItem>
@@ -82,12 +105,12 @@
 
 
             
-        public async Task<Commit> CreateCommitAsync(IEnumerable<NewTreeItem> files, CancellationToken cancellationToken = default)
+        public async Task<Func<Func<(string shaTree, string shaBranch), NewCommit>, Task<Commit>>> CreateCommitAsync(IEnumerable<NewTreeItem> files, CancellationToken cancellationToken = default)
         {
             var branch = await GetMasterAsync();
             var newTree = await CreateNewTree();
             var (treeSha, _) = await FillTree(newTree, files);
-            return await CreateCommitAsync(treeSha, branch.Object.Sha);
+            return CreateCommitAsync(treeSha, branch.Object.Sha);
         }
 
         public async Task<Reference> Push(Commit commit)
@@ -102,11 +125,10 @@
             return await client.Git.Blob.Create(owner, repo, blob);
         }
 
-        public async Task<Commit> CreateCommitAsync(string shaTree, string branchSha)
+        public Func<Func<(string shaTree, string shaBranch), NewCommit>, Task<Commit>> CreateCommitAsync(string shaTree, string branchSha)
         {
             var (_, owner, repo) = GetConfig();
-            var newCommit = new NewCommit("Publish new package.", shaTree, branchSha);
-            return await client.Git.Commit.Create(owner, repo, newCommit);
+             return action => client.Git.Commit.Create(owner, repo, action((shaTree, branchSha)));
         }
 
         public async Task<(string sha, IReadOnlyList<TreeItem> items)> FillTree(NewTree tree, IEnumerable<NewTreeItem> files)
@@ -116,6 +138,19 @@
                 tree.Tree.Add(item);
             var result = await client.Git.Tree.Create(owner, repo, tree);
             return (result.Sha, result.Tree);
+        }
+
+        public async Task<IReadOnlyList<RepositoryContent>> GetFilesAsync(string path)
+        {
+            var (_, owner, repo) = GetConfig();
+            return await client.Repository.Content.GetAllContents(owner, repo, path);
+        }
+
+        public async Task<byte[]> GetBinaryFileAsync(string path)
+        {
+            var files = await GetFilesAsync(path);
+            var content = files.First().EncodedContent;
+            return Convert.FromBase64String(content);
         }
 
 
