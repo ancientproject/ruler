@@ -51,7 +51,7 @@ jobs:
     - name: Deploy
       working-directory: ./src
       run: |
-        gcloud run deploy --image "$REGISTRY_HOSTNAME"/"$GKE_PROJECT"/"$IMAGE":"$GITHUB_SHA" --platform managed
+        gcloud run deploy "$DEPLOYMENT_NAME" --image "$REGISTRY_HOSTNAME"/"$GKE_PROJECT"/"$IMAGE":"$GITHUB_SHA" --platform managed
         
         
     -  name: Docker Build & Push to Github registry
