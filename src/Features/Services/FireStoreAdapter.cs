@@ -10,11 +10,13 @@
 
         public CollectionReference Cluster => db.Collection("cluster");
         public CollectionReference Packages => db.Collection("packages");
+        public CollectionReference Tokens => db.Collection("tokens");
     }
 
     public interface IFireStoreAdapter
     {
         CollectionReference Cluster { get; }
-        public CollectionReference Packages { get; }
+        CollectionReference Packages { get; }
+        CollectionReference Tokens { get; }
     }
 }
