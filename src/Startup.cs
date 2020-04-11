@@ -20,7 +20,8 @@ namespace ruler
             services.AddScoped<IFireStoreAdapter, FireStoreAdapter>();
             services.AddScoped<IRulerAPI, RulerExternalApiProvider>();
             services.AddScoped<IAuthProvider, RulerAuthProvider>();
-            services.AddScoped<GithubAdapter>();
+            services.AddScoped<IGithubAdapter, GithubAdapter>();
+            services.AddScoped<IPackageSource, GithubRunePackageSource>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
