@@ -40,9 +40,7 @@ jobs:
     - name: Build
       working-directory: ./src
       run: |        
-        gcloud builds submit --tag "$REGISTRY_HOSTNAME"/"$GKE_PROJECT"/"$IMAGE":"$GITHUB_SHA" \
-          --build-arg GITHUB_SHA="$GITHUB_SHA" \
-          --build-arg GITHUB_REF="$GITHUB_REF" .
+        gcloud builds submit --tag "$REGISTRY_HOSTNAME"/"$GKE_PROJECT"/"$IMAGE":"$GITHUB_SHA"
 
     # Push the Docker image to Google Container Registry
     - name: Deploy
