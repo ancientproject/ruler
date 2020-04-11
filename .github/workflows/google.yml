@@ -1,72 +1,37 @@
-name: Build and Deploy to GKE and Github
-
+name: Build and Deploy to GKE
 on:
   release:
     types: [created]
-
-# Environment variables available to all jobs and steps in this workflow
 env:
   GKE_PROJECT: ${{ secrets.GKE_PROJECT }}
   GKE_EMAIL: ${{ secrets.GKE_EMAIL }}
   GITHUB_SHA: ${{ github.sha }}
   GKE_ZONE: europe-north1
+  GKE_REGION: europe-north1
   IMAGE: core
   REGISTRY_HOSTNAME: gcr.io
   DEPLOYMENT_NAME: core
-
 jobs:
   setup-build-publish-deploy:
     name: Setup, Build, Publish, and Deploy
     runs-on: ubuntu-latest
     steps:
-
     - name: Checkout
       uses: actions/checkout@v2
-
-    # Setup gcloud CLI
     - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
       with:
         version: '288.0.0'
         service_account_email: ${{ secrets.GKE_EMAIL }}
         service_account_key: ${{ secrets.GKE_KEY }}
         project_id: ${{ secrets.GKE_PROJECT }}
-
-    # Configure docker to use the gcloud command-line tool as a credential helper
     - run: |
-        # Set up docker to authenticate
-        # via gcloud command-line tool.
         gcloud auth configure-docker
-        
-    # Set up project ID to config
-    - run: |
-        gcloud config set project $GKE_PROJECT
-        
-    # Build the Docker image
     - name: Build
       working-directory: ./src
       run: |        
         gcloud builds submit --tag "$REGISTRY_HOSTNAME"/"$GKE_PROJECT"/"$IMAGE":"$GITHUB_SHA"
-
-    # Push the Docker image to Google Container Registry
     - name: Deploy
       working-directory: ./src
       run: |
-        gcloud run deploy "$DEPLOYMENT_NAME" --image "$REGISTRY_HOSTNAME"/"$GKE_PROJECT"/"$IMAGE":"$GITHUB_SHA" --platform managed
-        
-        
-    -  name: Docker Build & Push to Github registry
-       uses: mr-smithers-excellent/docker-build-push@v2
-       with:
-         working-directory: ./src
-        # Name of the Docker image
-         image: ruler-core
-         # Tag override for Docker image
-         tag: $GITHUB_SHA
-         # Target Docker registry
-         registry: docker.pkg.github.com
-         # Docker registry username
-         username: 0xF6
-         # Docker registry password
-         password: ${{ secrets.GITHUB_TOKEN }}
-
+        gcloud run deploy "$DEPLOYMENT_NAME" --image "$REGISTRY_HOSTNAME"/"$GKE_PROJECT"/"$IMAGE":"$GITHUB_SHA" --platform managed --region "$GKE_REGION" --update-env-vars ${{ secrets.GKE_ENV_VARS }}
 
