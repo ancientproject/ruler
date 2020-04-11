@@ -35,7 +35,11 @@ jobs:
         # Set up docker to authenticate
         # via gcloud command-line tool.
         gcloud auth configure-docker
-      
+        
+    # Set up project ID to config
+    - run: |
+        gcloud config set project $GKE_PROJECT
+        
     # Build the Docker image
     - name: Build
       working-directory: ./src
