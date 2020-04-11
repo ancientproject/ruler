@@ -21,9 +21,9 @@
         public async Task<string> GetGithubToken(CancellationToken cancellationToken = default)
         {
             var token = await _authProvider.GetTokenAsync(cancellationToken);
-            return await $"{origin}/@me/container/github"
+            return await $"{origin}/@me/container/github/"
                 .WithHeader("User-Agent", "api.ruler/cloud")
-                .WithOAuthBearerToken(token)
+                .WithHeader("Authorization", token)
                 .GetStringAsync(cancellationToken);
         }
     }
