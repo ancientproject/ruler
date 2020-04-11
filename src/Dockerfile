@@ -1,16 +1,10 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1-alpine AS build
-WORKDIR /app
-
-COPY *.csproj ./
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
+WORKDIR /build
+COPY . .
 RUN dotnet restore
+RUN dotnet publish -c Release -o /app
 
-COPY . ./
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.1 AS final
 WORKDIR /app
-
-RUN dotnet publish -c Release -o out
-
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-alpine AS runtime
-WORKDIR /app
-COPY --from=build /app/out ./
-
-ENTRYPOINT ["dotnet", "in.dll"]
+COPY --from=build /app .
+ENTRYPOINT ["dotnet", "ruler.dll"]
