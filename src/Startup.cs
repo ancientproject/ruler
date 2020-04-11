@@ -22,6 +22,7 @@ namespace ruler
             services.AddScoped<IAuthProvider, RulerAuthProvider>();
             services.AddScoped<IGithubAdapter, GithubAdapter>();
             services.AddScoped<IPackageSource, GithubRunePackageSource>();
+            services.AddScoped<ITokenService, TokenService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
