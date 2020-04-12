@@ -28,11 +28,13 @@
         {
             if (version != null)
                 return await IsExist(ID, new NuGetVersion(version));
-            var snapshot = await _fireStore.Packages
+            var collection = await _fireStore.Packages
                 .Document(ID)
+                .Collection("list")
                 .GetSnapshotAsync();
-            _logger.LogInformation($"Snapshot by ~#/{ID}/ -> exist: {snapshot.Exists}");
-            return snapshot.Exists;
+            var exists = collection.Count > 0;
+            _logger.LogInformation($"Snapshot by ~#/{ID}/ -> exist: {exists}");
+            return exists;
         }
         public override async Task<bool> IsExist(string ID, NuGetVersion version)
         {
