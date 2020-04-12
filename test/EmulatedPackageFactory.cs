@@ -1,10 +1,9 @@
 ﻿namespace ProjectTest
 {
-    using System;
     using System.IO;
     using NuGet.Versioning;
-    using ruler.Features;
     using System.IO.Compression;
+    using Ancient.ProjectSystem;
     using Newtonsoft.Json;
 
     public static class EmulatedPackageFactory
