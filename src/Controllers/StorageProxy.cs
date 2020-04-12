@@ -28,8 +28,8 @@ namespace ruler.Controllers
             _cancellationToken = cancellationToken;
         }
         [AcceptVerbs("PROPFIND")]
-        [Route("/api/storage")]
-        public async Task<IActionResult> IsExistPackage([FromQuery] string id, [FromQuery] string version = null)
+        [Route("/api/registry/@/{id}/{version?}")]
+        public async Task<IActionResult> IsExistPackage(string id, string version = null)
         {
             if (id is null)
                 return StatusCode(400, new {message = "Incorrect search params"});
@@ -43,8 +43,8 @@ namespace ruler.Controllers
             return NotFound();
         }
         [HttpGet]
-        [Route("/api/storage")]
-        public async Task<IActionResult> Fetch([FromQuery] string id, [FromQuery] string version = null, [FromServices] CancellationToken cancellationToken = default)
+        [Route("/api/registry/@/{id}/{version?}")]
+        public async Task<IActionResult> Fetch(string id, string version = null, [FromServices] CancellationToken cancellationToken = default)
         {
             if (!await _adapter.IsExist(id))
                 return StatusCode(404, new { message = $"Package with ID {id}{version} not found in registry." });
@@ -53,7 +53,7 @@ namespace ruler.Controllers
             return File(result.Content.ToArray(), "application/rpkg+zip");
         }
         [HttpPut]
-        [Route("/api/storage")]
+        [Route("/api/registry/@/")]
         public async Task<IActionResult> AddPackageAsync()
         {
             if (!Request.Headers.ContainsKey("X-Rune-Key"))
