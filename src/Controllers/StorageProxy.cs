@@ -1,12 +1,13 @@
 namespace ruler.Controllers
 {
+    using System;
     using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Ancient.ProjectSystem;
     using Features;
     using Microsoft.AspNetCore.Mvc;
-    using NuGet.Versioning;
 
     [ApiController]
     public class StorageProxy : ControllerBase
@@ -39,13 +40,22 @@ namespace ruler.Controllers
             var file = files.First();
             var memory = new MemoryStream();
             await file.CopyToAsync(memory, _cancellationToken);
-
-            await _adapter.New(new RunePackage
+            var package = default(RunePackage);
+            try
             {
-                Content = memory, 
-                ID = id, 
-                Version = new NuGetVersion(version)
-            });
+                package = await RunePackage.Unwrap(memory, _cancellationToken);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(400, new {message = e.Message});
+            }
+
+            if (await _adapter.IsExist(package))
+                return StatusCode(422, new { message = $"Package {package.ID} {package.Version} has already exist in registry." });
+
+            await _adapter.New(package);
+
+            await package.DisposeAsync();
 
             return StatusCode(200);
         }
