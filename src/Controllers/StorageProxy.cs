@@ -8,6 +8,8 @@ namespace ruler.Controllers
     using Ancient.ProjectSystem;
     using Features;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.AspNetCore.Mvc.Routing;
+    using NuGet.Versioning;
 
     [ApiController]
     public class StorageProxy : ControllerBase
@@ -22,8 +24,31 @@ namespace ruler.Controllers
             _tokenService = tokenService;
             _cancellationToken = cancellationToken;
         }
+        [AcceptVerbs("PROPFIND")]
+        [Route("/api/storage")]
+        public async Task<IActionResult> IsExistPackage([FromQuery] string id, [FromQuery] string version = null)
+        {
+            if (id is null)
+                return StatusCode(400, new {message = "Incorrect search params"});
+            if (version != null && !NuGetVersion.TryParse(version, out _))
+                return StatusCode(400, new { message = "Incorrect version format." });
 
-        [HttpPost("/api/storage")]
+            if (await _adapter.IsExist(id, version))
+                return Ok();
+            return NotFound();
+        }
+        [HttpGet]
+        [Route("/api/storage")]
+        public async Task<IActionResult> Fetch([FromQuery] string id, [FromQuery] string version = null, [FromServices] CancellationToken cancellationToken = default)
+        {
+            if (!await _adapter.IsExist(id))
+                return StatusCode(404, new { message = $"Package with ID {id}{version} not found in registry." });
+            var result = await _adapter.Get(id, version is null ? null : new NuGetVersion(version), cancellationToken);
+
+            return File(result.Content.ToArray(), "application/rpkg+zip");
+        }
+        [HttpPut]
+        [Route("/api/storage")]
         public async Task<IActionResult> AddPackageAsync()
         {
             if (!Request.Headers.ContainsKey("X-Rune-Key"))
