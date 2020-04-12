@@ -8,5 +8,7 @@
     {
         [HttpGet("/api/version")]
         public IActionResult GetVersion() => Ok(Assembly.GetExecutingAssembly().GetName().Version.ToString());
+        [HttpGet("/")]
+        public IActionResult Index() => Redirect("https://cluster.ruler.runic.cloud/");
     }
 }
