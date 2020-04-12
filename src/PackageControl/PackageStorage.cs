@@ -12,6 +12,8 @@
         public abstract Task New([DisallowNull] RunePackage package);
         public abstract Task Delete([DisallowNull] string ID, [DisallowNull] NuGetVersion version, [DisallowNull] string reason);
         public abstract Task<bool> IsExist(RunePackage package);
+        public abstract Task<bool> IsExist(string ID, string version = null);
+        public abstract Task<bool> IsExist(string ID, NuGetVersion version);
         public abstract Task<RunePackage> Get(string ID, NuGetVersion version = null,
             CancellationToken cancellationToken = default);
     }

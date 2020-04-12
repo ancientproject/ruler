@@ -21,16 +21,27 @@
             _adapter = adapter;
             _fireStore = fireStore;
         }
-
-        public override async Task<bool> IsExist(RunePackage package)
+        public override async Task<bool> IsExist(string ID, string version = null)
         {
+            if (version != null)
+                return await IsExist(ID, new NuGetVersion(version));
             var snapshot = await _fireStore.Packages
-                .Document(package.ID)
-                .Collection("list")
-                .Document($"{package.Version}")
+                .Document(ID)
                 .GetSnapshotAsync();
             return snapshot.Exists;
         }
+        public override async Task<bool> IsExist(string ID, NuGetVersion version)
+        {
+            var snapshot = await _fireStore.Packages
+                .Document(ID)
+                .Collection("list")
+                .Document($"{version}")
+                .GetSnapshotAsync();
+            return snapshot.Exists;
+        }
+
+        public override Task<bool> IsExist(RunePackage package)
+            => IsExist(package.ID, package.Version);
 
         public override async Task New(RunePackage package)
         {

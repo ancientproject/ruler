@@ -12,5 +12,7 @@
         Task Delete([DisallowNull] string ID, [DisallowNull] NuGetVersion version, [DisallowNull] string reason);
         Task<RunePackage> Get(string ID, NuGetVersion version = null, CancellationToken cancellationToken = default);
         Task<bool> IsExist(RunePackage package);
+        Task<bool> IsExist(string ID, NuGetVersion version);
+        Task<bool> IsExist(string ID, string version = null);
     }
 }
