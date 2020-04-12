@@ -9,6 +9,7 @@ namespace ruler.Controllers
     using Features;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Mvc.Routing;
+    using Microsoft.Extensions.Logging;
     using NuGet.Versioning;
 
     [ApiController]
@@ -16,12 +17,14 @@ namespace ruler.Controllers
     {
         private readonly IPackageSource _adapter;
         private readonly ITokenService _tokenService;
+        private readonly ILogger<StorageProxy> _logger;
         private readonly CancellationToken _cancellationToken;
 
-        public StorageProxy(IPackageSource adapter, ITokenService tokenService, CancellationToken cancellationToken = default)
+        public StorageProxy(IPackageSource adapter, ITokenService tokenService, ILogger<StorageProxy> logger, CancellationToken cancellationToken = default)
         {
             _adapter = adapter;
             _tokenService = tokenService;
+            _logger = logger;
             _cancellationToken = cancellationToken;
         }
         [AcceptVerbs("PROPFIND")]
@@ -32,6 +35,8 @@ namespace ruler.Controllers
                 return StatusCode(400, new {message = "Incorrect search params"});
             if (version != null && !NuGetVersion.TryParse(version, out _))
                 return StatusCode(400, new { message = "Incorrect version format." });
+
+            _logger.LogInformation($"PROPFIND /api/storage with id '{id}', version: '{version}'");
 
             if (await _adapter.IsExist(id, version))
                 return Ok();

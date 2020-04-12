@@ -8,6 +8,7 @@
     using System.Threading.Tasks;
     using Ancient.ProjectSystem;
     using Flurl.Http;
+    using Microsoft.Extensions.Logging;
     using NuGet.Versioning;
     using Octokit;
 
@@ -15,11 +16,13 @@
     {
         private readonly IGithubAdapter _adapter;
         private readonly IFireStoreAdapter _fireStore;
+        private readonly ILogger<GithubRunePackageSource> _logger;
 
-        public GithubRunePackageSource(IGithubAdapter adapter, IFireStoreAdapter fireStore)
+        public GithubRunePackageSource(IGithubAdapter adapter, IFireStoreAdapter fireStore, ILogger<GithubRunePackageSource> logger)
         {
             _adapter = adapter;
             _fireStore = fireStore;
+            _logger = logger;
         }
         public override async Task<bool> IsExist(string ID, string version = null)
         {
@@ -28,6 +31,7 @@
             var snapshot = await _fireStore.Packages
                 .Document(ID)
                 .GetSnapshotAsync();
+            _logger.LogInformation($"Snapshot by ~#/{ID}/ -> exist: {snapshot.Exists}");
             return snapshot.Exists;
         }
         public override async Task<bool> IsExist(string ID, NuGetVersion version)
@@ -37,6 +41,7 @@
                 .Collection("list")
                 .Document($"{version}")
                 .GetSnapshotAsync();
+            _logger.LogInformation($"Snapshot by ~#/{ID}/list/{version}/ -> exist: {snapshot.Exists}");
             return snapshot.Exists;
         }
 
