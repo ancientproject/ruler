@@ -8,7 +8,6 @@ namespace ruler.Controllers
     using Ancient.ProjectSystem;
     using Features;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.AspNetCore.Mvc.Routing;
     using Microsoft.Extensions.Logging;
     using NuGet.Versioning;
 
@@ -44,11 +43,11 @@ namespace ruler.Controllers
         }
         [HttpGet]
         [Route("/api/registry/@/{id}/{version?}")]
-        public async Task<IActionResult> Fetch(string id, string version = null, [FromServices] CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Fetch(string id, string version = null)
         {
             if (!await _adapter.IsExist(id))
                 return StatusCode(404, new { message = $"Package with ID {id}{version} not found in registry." });
-            var result = await _adapter.Get(id, version is null ? null : new NuGetVersion(version), cancellationToken);
+            var result = await _adapter.Get(id, version is null ? null : new NuGetVersion(version), _cancellationToken);
 
             return File(result.Content.ToArray(), "application/rpkg+zip");
         }
