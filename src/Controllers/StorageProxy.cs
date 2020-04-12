@@ -60,8 +60,6 @@ namespace ruler.Controllers
             var key = Request.Headers["X-Rune-Key"];
             if (!await _tokenService.IsValidToken(key))
                 return StatusCode(401, new {message = "Authorization key is invalid." });
-            if (Request.Form.Files.Count == 0)
-                return StatusCode(406);
             if (Request.Form.Files.Count != 1)
                 return StatusCode(406, new { message = "One package file was expected." });
 
