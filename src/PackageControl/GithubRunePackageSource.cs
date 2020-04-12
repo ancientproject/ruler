@@ -6,6 +6,7 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Ancient.ProjectSystem;
     using Flurl.Http;
     using NuGet.Versioning;
     using Octokit;
@@ -19,6 +20,16 @@
         {
             _adapter = adapter;
             _fireStore = fireStore;
+        }
+
+        public override async Task<bool> IsExist(RunePackage package)
+        {
+            var snapshot = await _fireStore.Packages
+                .Document(package.ID)
+                .Collection("list")
+                .Document($"{package.Version}")
+                .GetSnapshotAsync();
+            return snapshot.Exists;
         }
 
         public override async Task New(RunePackage package)
