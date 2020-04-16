@@ -132,7 +132,7 @@
             var result = collection.First();
 
 
-            var content = Convert.FromBase64String(result.Content);
+            var content = Convert.FromBase64String(result.EncodedContent);
 
             return new RunePackage
             {
