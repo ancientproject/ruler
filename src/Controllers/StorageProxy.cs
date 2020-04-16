@@ -9,6 +9,7 @@ namespace ruler.Controllers
     using Features;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Net.Http.Headers;
     using NuGet.Versioning;
 
     [ApiController]
@@ -49,7 +50,7 @@ namespace ruler.Controllers
                 return StatusCode(404, new { message = $"Package with ID {id}{version} not found in registry." });
             var result = await _adapter.Get(id, version is null ? null : new NuGetVersion(version), _cancellationToken);
 
-            return File(result.Content.ToArray(), "application/rpkg+zip");
+            return File(result.Content, "application/rpkg+zip", $"{result.ID}-{result.Version}.rpkg");
         }
         [HttpPut]
         [Route("/api/registry/@/")]
