@@ -71,7 +71,7 @@ namespace ruler.Controllers
             var package = default(RunePackage);
             try
             {
-                package = await RunePackage.Unwrap(memory, _cancellationToken);
+                package = await RunePackage.Unwrap(memory.ToArray(), _cancellationToken);
             }
             catch (Exception e)
             {
