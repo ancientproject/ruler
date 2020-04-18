@@ -8,6 +8,7 @@
     using System.Threading.Tasks;
     using Ancient.ProjectSystem;
     using Flurl.Http;
+    using Google.Cloud.Firestore;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using NuGet.Versioning;
@@ -75,6 +76,10 @@
                 .Document($"{package.Version}");
 
             await metadata.SetAsync(new RunePackageMetadata {Status = MetadataStatusType.Listed});
+
+
+            // TODO mv to external hook\task
+            await RefreshIndex();
         }
 
         public override async Task Delete(string ID, NuGetVersion version, string reason)
@@ -106,6 +111,54 @@
 
 
             await metadata.UpdateAsync(collection);
+
+            // TODO mv to external hook\task
+            await RefreshIndex();
+        }
+
+
+        public async Task RefreshIndex()
+        {
+           var result = await _fireStore.Packages
+                .ListDocumentsAsync()
+                .SelectMany(x => x
+                    .Collection("list")
+                    .ListDocumentsAsync()
+                    .SelectAwait(async w => new
+                    {
+                        id = x.Id,
+                        version = w.Id,
+                        status = (await w.GetSnapshotAsync()).GetValue<MetadataStatusType>("Status")
+                    })
+                )
+                .ToListAsync();
+
+
+
+
+           var index = new ListOfPackages
+           {
+               Packages = result.Select(x => new ListOfPackages.RunePackageLite()
+               {
+                   ID = x.id, 
+                   Version = x.version, 
+                   Status = x.status
+               }).ToList()
+           };
+
+
+           var content = JsonConvert.SerializeObject(index, Formatting.Indented);
+
+            var list = new List<NewTreeItem>
+            {
+                await _adapter.CreateTreeItem("index.json", content)
+            };
+            var postCreate = await _adapter.CreateCommitAsync(list);
+
+            var commit = await postCreate(x
+                => new NewCommit($"Refresh index.json", x.shaTree, x.shaBranch));
+
+            await _adapter.Push(commit);
         }
 
         public override async Task<RunePackage> Get(string ID, NuGetVersion version = null, CancellationToken cancellationToken = default)
