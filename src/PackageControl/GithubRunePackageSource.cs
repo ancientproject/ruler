@@ -9,6 +9,7 @@
     using Ancient.ProjectSystem;
     using Flurl.Http;
     using Microsoft.Extensions.Logging;
+    using Newtonsoft.Json;
     using NuGet.Versioning;
     using Octokit;
 
@@ -55,8 +56,14 @@
             var formattedName = $"{package.ID} {package.Version}";
             var path = $"packages/{package.ID}/{package.Version}";
 
-            var postCreate = 
-                await _adapter.CreateCommitAsync($"{path}/target.rpkg", package.Content);
+
+            var list = new List<NewTreeItem>
+            {
+                await _adapter.CreateTreeItem($"{path}/target.rpkg", package.Content),
+                await _adapter.CreateTreeItem($"{path}/target.rspec.json", JsonConvert.SerializeObject(package.Spec, Formatting.Indented))
+            };
+            var postCreate = await _adapter.CreateCommitAsync(list);
+
             var commit = await postCreate( x 
                 => new NewCommit($"Upload new package, {formattedName}", x.shaTree, x.shaBranch));
 
