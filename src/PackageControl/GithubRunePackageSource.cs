@@ -210,7 +210,7 @@
                 .Collection("list")
                 .ListDocumentsAsync()
                 .Select(x => new NuGetVersion(x.Id))
-                .OrderBy(x => x)
+                .OrderByDescending(x => x)
                 .FirstAsync(cancellationToken);
 
         public async Task<NuGetVersion> FindMathByVersion(string ID, NuGetVersion target, CancellationToken cancellationToken = default) =>
