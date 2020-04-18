@@ -18,6 +18,7 @@
             CancellationToken cancellationToken = default);
 
         Task<NewTreeItem> CreateTreeItem(string name, MemoryStream memory);
+        Task<NewTreeItem> CreateTreeItem(string name, string text);
         Task<Func<Func<(string shaTree, string shaBranch), NewCommit>, Task<Commit>>> CreateCommitAsync(IEnumerable<NewTreeItem> files, CancellationToken cancellationToken = default);
         Task<Reference> Push(Commit commit);
         Task<BlobReference> CreateBlob(NewBlob blob);
@@ -83,7 +84,22 @@
             return await CreateCommitAsync(list, cancellationToken);
         }
 
-
+        public async Task<NewTreeItem> CreateTreeItem(string name, string text)
+        {
+            var blob = new NewBlob
+            {
+                Content = text,
+                Encoding = EncodingType.Utf8
+            };
+            var result = await this.CreateBlob(blob);
+            return new NewTreeItem
+            {
+                Type = TreeType.Blob,
+                Mode = Octokit.FileMode.File,
+                Path = name,
+                Sha = result.Sha
+            };
+        }
         public async Task<NewTreeItem> CreateTreeItem(string name, MemoryStream memory)
         {
             var array = memory.ToArray();
